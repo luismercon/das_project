@@ -1,4 +1,4 @@
-package pt.isec.mei.das.demo.controller;
+package pt.isec.mei.das.controller;
 
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
