@@ -1,0 +1,1 @@
+insert into PROJECT(name, created_at) VALUES ('Project 1', current_timestamp)
