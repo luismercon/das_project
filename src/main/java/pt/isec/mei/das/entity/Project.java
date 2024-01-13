@@ -27,4 +27,7 @@ public class Project {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "file_path")
+    private String filePath;
+
 }

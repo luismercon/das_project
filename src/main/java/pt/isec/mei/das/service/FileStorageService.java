@@ -63,4 +63,10 @@ public class FileStorageService {
       throw new Exception("File not found " + fileName, ex);
     }
   }
+
+  public Path uploadFileWithNewName(MultipartFile file, String newFileName) throws IOException {
+    Path targetLocation = this.fileStorageLocation.resolve(newFileName);
+    file.transferTo(targetLocation.toFile());
+    return targetLocation;
+  }
 }
