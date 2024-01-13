@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -14,6 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pt.isec.mei.das.config.FileStorageProperties;
 
 @Service
+@Slf4j
 public class FileStorageService {
 
   private final Path fileStorageLocation;
@@ -27,9 +28,7 @@ public class FileStorageService {
 
     String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 
-    System.out.println("==========================================");
-    System.out.println("Uploading through Service: " + fileName);
-    System.out.println("==========================================");
+    log.info("Uploading through Service: " + fileName);
 
     try {
       Path targetLocation = fileStorageLocation.resolve(fileName);
@@ -49,9 +48,7 @@ public class FileStorageService {
 
   public Resource loadFileAsResource(String fileName) throws Exception {
 
-    System.out.println("==========================================");
-    System.out.println("Downloading through Service: " + fileName);
-    System.out.println("==========================================");
+    log.info("Downloading through Service: " + fileName);
 
     try {
       Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
