@@ -1,1 +1,1 @@
-insert into PROJECT(name, created_at) VALUES ('Project 1', current_timestamp)
+insert into PROJECT(name, created_at, file_path) VALUES ('Project 1', current_timestamp, 'example.cpp')

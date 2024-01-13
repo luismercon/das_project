@@ -1,18 +1,17 @@
 package pt.isec.mei.das.controller;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import pt.isec.mei.das.dto.ProjectDTO;
-import pt.isec.mei.das.entity.Project;
 import pt.isec.mei.das.service.ProjectService;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/projects")
@@ -26,8 +25,13 @@ public class ProjectController {
     return ResponseEntity.ok(projectService.getlAllProjects());
   }
 
-  @PostMapping
-  private ResponseEntity<ProjectDTO> createProject(@RequestBody ProjectDTO request) {
+  @GetMapping("/{id}")
+  public ResponseEntity<ProjectDTO> getProjectById(@PathVariable long id) {
+    return ResponseEntity.ok(projectService.getProjectById(id));
+  }
+
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ResponseEntity<ProjectDTO> createProject(@ModelAttribute ProjectDTO request) {
     return ResponseEntity.ok(projectService.createProject(request));
   }
 }
