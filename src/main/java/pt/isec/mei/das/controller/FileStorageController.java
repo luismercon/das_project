@@ -2,17 +2,14 @@ package pt.isec.mei.das.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,67 +17,55 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import pt.isec.mei.das.config.FileStorageProperties;
+import pt.isec.mei.das.service.FileStorageService;
 
 @RestController
 @RequestMapping("/api/files")
 public class FileStorageController {
 
   private final Path fileStorageLocation;
+  private final FileStorageService fileStorageService;
 
-  public FileStorageController(FileStorageProperties fileStorageProperties) {
+  public FileStorageController(
+      FileStorageProperties fileStorageProperties, FileStorageService fileStorageService) {
     this.fileStorageLocation =
         Paths.get(fileStorageProperties.getUploadDir()).toAbsolutePath().normalize();
+    this.fileStorageService = fileStorageService;
   }
 
   @PostMapping("/upload")
   public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
 
-    String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+    String serviceResponse = fileStorageService.uploadFile(file);
 
-    try {
-
-      Path targetLocation = fileStorageLocation.resolve(fileName);
-      file.transferTo(targetLocation);
-
-      String fileDownloadUri =
-          ServletUriComponentsBuilder.fromCurrentContextPath()
-              .path("/api/files/download/")
-              .path(fileName)
-              .toUriString();
-
-      return ResponseEntity.ok("Upload completed! Download link: " + fileDownloadUri);
-
-    } catch (IOException e) {
+    if (serviceResponse != null) {
+      return ResponseEntity.ok(fileStorageService.uploadFile(file));
+    } else {
       return ResponseEntity.badRequest().build();
     }
   }
 
   @GetMapping("/download/{fileName:.+}")
   public ResponseEntity<Resource> downloadFile(
-      @PathVariable String fileName, HttpServletRequest request) throws IOException {
-
-    Path filePath = fileStorageLocation.resolve(fileName).normalize();
-
+      @PathVariable String fileName, HttpServletRequest request) {
     try {
-      Resource resource = new UrlResource(filePath.toUri());
-      String contetType =
+      Resource resource = fileStorageService.loadFileAsResource(fileName);
+      String contentType =
           request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
 
-      if (contetType == null) {
-        contetType = "application/octet-stream";
+      if (contentType == null) {
+        contentType = "application/octet-stream";
       }
 
       return ResponseEntity.ok()
-          .contentType(MediaType.parseMediaType(contetType))
+          .contentType(MediaType.parseMediaType(contentType))
           .header(
               HttpHeaders.CONTENT_DISPOSITION,
-              "attachment: filename=\"" + resource.getFilename() + "\"")
+              "attachment; filename=\"" + resource.getFilename() + "\"")
           .body(resource);
-
-    } catch (MalformedURLException e) {
-      return ResponseEntity.badRequest().build();
+    } catch (Exception ex) {
+      return ResponseEntity.notFound().build();
     }
   }
 
