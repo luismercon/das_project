@@ -8,9 +8,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pt.isec.mei.das.dto.ProjectDTO;
+import pt.isec.mei.das.service.BuildManager;
+import pt.isec.mei.das.service.BuildService;
 import pt.isec.mei.das.service.ProjectService;
 
 @RestController
@@ -19,6 +22,7 @@ import pt.isec.mei.das.service.ProjectService;
 public class ProjectController {
 
   private final ProjectService projectService;
+  private final BuildService buildService;
 
   @GetMapping
   public ResponseEntity<List<ProjectDTO>> getAllProjects() {
@@ -28,6 +32,14 @@ public class ProjectController {
   @GetMapping("/{id}")
   public ResponseEntity<ProjectDTO> getProjectById(@PathVariable long id) {
     return ResponseEntity.ok(projectService.getProjectById(id));
+  }
+
+  @PutMapping("/{id}/build")
+  public ResponseEntity<String> triggerBuild(@PathVariable long id) {
+
+    buildService.triggerBuild(id);
+
+    return ResponseEntity.ok("Build triggered for project " + id);
   }
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

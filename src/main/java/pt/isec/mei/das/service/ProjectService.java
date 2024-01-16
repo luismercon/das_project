@@ -7,9 +7,11 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import pt.isec.mei.das.config.FileStorageProperties;
 import pt.isec.mei.das.dto.ProjectDTO;
 import pt.isec.mei.das.entity.Project;
 import pt.isec.mei.das.exception.ProjectNotFoundException;
+import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
 
 @Service
@@ -18,6 +20,8 @@ public class ProjectService {
 
   private final ProjectRepository projectRepository;
   private final FileStorageService fileStorageService;
+  private final BuildResultRepository buildResultRepository;
+  private final FileStorageProperties fileStorageProperties;
 
   public List<ProjectDTO> getlAllProjects() {
     List<Project> projects = projectRepository.findAll();

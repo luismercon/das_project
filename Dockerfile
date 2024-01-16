@@ -13,5 +13,9 @@ COPY target/online-compilation-0.0.1-SNAPSHOT.jar /usr/src/myapp/online-compilat
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
 
+# Add JVM options to enable remote debugging
+ENV JAVA_TOOL_OPTIONS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+
+
 # Run the JAR file
 ENTRYPOINT ["java","-jar","online-compilation.jar"]
