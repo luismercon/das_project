@@ -59,7 +59,7 @@ public class BuildService {
       int exitCode = process.waitFor();
 
       System.out.println("======================");
-      System.out.println("Chegou aqui com o exitCode: " + exitCode);
+      System.out.println("It reached here with exitCode: " + exitCode);
       System.out.println("======================");
 
     } catch (IOException | InterruptedException e) {
