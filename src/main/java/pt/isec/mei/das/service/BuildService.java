@@ -1,17 +1,15 @@
 package pt.isec.mei.das.service;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pt.isec.mei.das.config.FileStorageProperties;
 import pt.isec.mei.das.entity.Project;
 import pt.isec.mei.das.exception.ProjectNotFoundException;
 import pt.isec.mei.das.repository.ProjectRepository;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
@@ -41,7 +39,7 @@ public class BuildService {
 
     System.out.println(BuildManager.getInstance().getFilepathQueue().toString());
 
-    // callCompiler(project.getFilePath());
+     callCompiler(project.getFilePath());
   }
 
   private void callCompiler(String filePath) {
