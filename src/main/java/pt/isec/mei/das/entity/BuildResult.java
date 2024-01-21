@@ -8,41 +8,43 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Entity
 @Data
-@Table(name = "build_results")
+@Table(name = "BUILD_RESULT")
 public class BuildResult {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  @Column(name = "build_result_id")
-  private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "build_result_id")
+    private long id;
 
-  @ManyToOne
-  @JoinColumn(name = "project_id", nullable = false)
-  private Project project;
+    @ManyToOne
+    @JoinColumn(name = "project_id", nullable = false)
+    private Project project;
 
-  @Column(name = "source_code_hash")
-  private String sourceCodeHash;
+    @Column(name = "source_code_hash")
+    private String sourceCodeHash;
 
-  @Column(name = "compilation_status")
-  private Boolean compilationStatus;
+    @Column(name = "compilation_status")
+    private Boolean compilationStatus;
 
-  @Column(name = "error_messages")
-  private String errorMessages;
+    @Column(name = "error_messages")
+    private String errorMessages;
 
-  @Column(name = "warning_messages")
-  private String warningMessages;
+    @Column(name = "warning_messages")
+    private String warningMessages;
 
-  @Column(name = "executable_file_path")
-  private String executableFilePath;
+    @Column(name = "executable_file_path")
+    private String executableFilePath;
 
-  @Column(name = "build_logs")
-  private String buildLogs;
+    @Column(name = "build_logs")
+    private String buildLogs;
 
-  @Column(name = "timestamp")
-  private LocalDateTime timestamp;
+    @Column(name = "timestamp")
+    private LocalDateTime timestamp;
 }

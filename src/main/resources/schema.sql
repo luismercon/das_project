@@ -6,7 +6,7 @@ CREATE TABLE PROJECT
     file_path  varchar(100)
 );
 
-CREATE TABLE build_results
+CREATE TABLE BUILD_RESULT
 (
     build_result_id      BIGSERIAL PRIMARY KEY,
     project_id           BIGINT NOT NULL,
