@@ -46,7 +46,7 @@ public class BuildService {
 
   private void callCompiler(String filePath) {
 
-    ProcessBuilder builder = new ProcessBuilder("gcc", filePath, "-o", "outputExecutable");
+    ProcessBuilder builder = new ProcessBuilder("g++", filePath, "-o", "outputExecutable");
     builder.directory(new File(fileStorageProperties.getCompiledDir()));
     builder.redirectErrorStream(true);
 
