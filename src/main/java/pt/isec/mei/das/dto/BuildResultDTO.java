@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import pt.isec.mei.das.enums.CompilationStatus;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +16,7 @@ public class BuildResultDTO {
     private Long id;
     private Long projectId;
     private String sourceCodeHash;
-    private Boolean compilationStatus;
+    private String compilationStatus;
     private String executableFilePath;
     private String buildLogs;
     private LocalDateTime timestamp;

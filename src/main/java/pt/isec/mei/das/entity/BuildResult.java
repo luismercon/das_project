@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 import lombok.Data;
+import pt.isec.mei.das.enums.CompilationStatus;
 
 @Entity
 @Data
@@ -31,7 +32,7 @@ public class BuildResult {
     private String sourceCodeHash;
 
     @Column(name = "compilation_status")
-    private Boolean compilationStatus;
+    private String compilationStatus;
 
     @Column(name = "executable_file_path")
     private String executableFilePath;
