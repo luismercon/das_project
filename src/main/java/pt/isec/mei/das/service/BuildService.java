@@ -52,7 +52,7 @@ public class BuildService {
     }
 
     private void build(Project project) {
-        String outputFileName = "outputExecutable";
+        String outputFileName = project.getId() + "_" + project.getName() + "_compiled";
         File outputDir = new File(fileStorageProperties.getCompiledDir());
 
         ProcessBuilder processBuilder = new ProcessBuilder("g++", project.getFilePath(), "-o", outputFileName);
@@ -73,10 +73,6 @@ public class BuildService {
             if (exitCode == 0) {
                 buildResult.setExecutableFilePath(new File(outputDir, outputFileName).getAbsolutePath());
                 buildResult.setCompilationStatus(true);
-            } else {
-                // todo do we really need these columns? can we just always use 'buildLogs' instead?
-                buildResult.setErrorMessages(buildLogs);
-                buildResult.setWarningMessages(buildLogs);
             }
             buildResultRepository.save(buildResult);
         } catch (IOException | InterruptedException e) {
@@ -96,8 +92,6 @@ public class BuildService {
                                         .projectId(b.getProject().getId())
                                         .sourceCodeHash(b.getSourceCodeHash())
                                         .compilationStatus(b.getCompilationStatus())
-                                        .errorMessages(b.getErrorMessages())
-                                        .warningMessages(b.getWarningMessages())
                                         .executableFilePath(b.getExecutableFilePath())
                                         .buildLogs(b.getBuildLogs())
                                         .timestamp(b.getTimestamp())

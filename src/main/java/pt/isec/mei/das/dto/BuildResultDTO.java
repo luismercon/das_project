@@ -16,8 +16,6 @@ public class BuildResultDTO {
     private Long projectId;
     private String sourceCodeHash;
     private Boolean compilationStatus;
-    private String errorMessages;
-    private String warningMessages;
     private String executableFilePath;
     private String buildLogs;
     private LocalDateTime timestamp;

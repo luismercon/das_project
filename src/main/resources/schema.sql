@@ -12,8 +12,6 @@ CREATE TABLE BUILD_RESULT
     project_id           BIGINT NOT NULL,
     source_code_hash     VARCHAR(255),
     compilation_status   BOOLEAN,
-    error_messages       TEXT,
-    warning_messages     TEXT,
     executable_file_path VARCHAR(255),
     build_logs           TEXT,
     timestamp            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

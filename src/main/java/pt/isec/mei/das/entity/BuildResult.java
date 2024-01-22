@@ -33,12 +33,6 @@ public class BuildResult {
     @Column(name = "compilation_status")
     private Boolean compilationStatus;
 
-    @Column(name = "error_messages")
-    private String errorMessages;
-
-    @Column(name = "warning_messages")
-    private String warningMessages;
-
     @Column(name = "executable_file_path")
     private String executableFilePath;
 
