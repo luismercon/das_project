@@ -9,6 +9,7 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pt.isec.mei.das.config.FileStorageProperties;
 import pt.isec.mei.das.dto.BuildResultDTO;
 import pt.isec.mei.das.entity.BuildResult;
@@ -25,6 +26,7 @@ public class BuildService {
     private final FileStorageProperties fileStorageProperties;
     private final BuildResultRepository buildResultRepository;
 
+    @Transactional
     public void triggerBuild(long projectId) {
 
         Project project =
