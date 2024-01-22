@@ -23,6 +23,7 @@ public class BuildResult {
     @Column(name = "build_result_id")
     private long id;
 
+    // todo i suggest we change it for 'projectId' column so we could retrieve the buildResults for a particular project
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;

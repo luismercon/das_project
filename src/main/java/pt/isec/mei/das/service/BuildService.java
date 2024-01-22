@@ -4,13 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pt.isec.mei.das.config.FileStorageProperties;
 import pt.isec.mei.das.dto.BuildResultDTO;
-import pt.isec.mei.das.dto.ProjectDTO;
 import pt.isec.mei.das.entity.BuildResult;
 import pt.isec.mei.das.entity.Project;
 import pt.isec.mei.das.exception.ProjectNotFoundException;
@@ -46,29 +46,37 @@ public class BuildService {
 
         System.out.println(BuildManager.getInstance().getFilepathQueue().toString());
 
-        callCompiler(project.getFilePath());
+        build(project);
     }
 
-    private void callCompiler(String filePath) {
+    private void build(Project project) {
+        String outputFileName = "outputExecutable";
+        File outputDir = new File(fileStorageProperties.getCompiledDir());
 
-        ProcessBuilder builder = new ProcessBuilder("g++", filePath, "-o", "outputExecutable");
-        builder.directory(new File(fileStorageProperties.getCompiledDir()));
-        builder.redirectErrorStream(true);
+        ProcessBuilder processBuilder = new ProcessBuilder("g++", project.getFilePath(), "-o", outputFileName);
+        processBuilder.directory(outputDir);
+        processBuilder.redirectErrorStream(true);
 
         try {
-            Process process = builder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            StringBuilder buildLogs = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                buildLogs.append(line).append("\n");
-            }
+            Process process = processBuilder.start();
             int exitCode = process.waitFor();
 
-            System.out.println("======================");
-            System.out.println("It reached here with exitCode: " + exitCode);
-            System.out.println("======================");
+            String buildLogs = getBuildLogs(process);
 
+            BuildResult buildResult = new BuildResult();
+            buildResult.setProject(project);
+            buildResult.setBuildLogs(buildLogs);
+            buildResult.setTimestamp(LocalDateTime.now());
+
+            if (exitCode == 0) {
+                buildResult.setExecutableFilePath(new File(outputDir, outputFileName).getAbsolutePath());
+                buildResult.setCompilationStatus(true);
+            } else {
+                // todo do we really need these columns? can we just always use 'buildLogs' instead?
+                buildResult.setErrorMessages(buildLogs);
+                buildResult.setWarningMessages(buildLogs);
+            }
+            buildResultRepository.save(buildResult);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -93,5 +101,15 @@ public class BuildService {
                                         .timestamp(b.getTimestamp())
                                         .build())
                 .toList();
+    }
+
+    private String getBuildLogs(Process process) throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+        String line;
+        StringBuilder buildLogs = new StringBuilder();
+        while ((line = reader.readLine()) != null) {
+            buildLogs.append(line).append("\n");
+        }
+        return buildLogs.toString();
     }
 }
