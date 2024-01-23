@@ -58,7 +58,6 @@ public class ProjectService {
     Project projectSaved = projectRepository.save(project);
 
     try {
-      // String originalFileName = StringUtils.cleanPath(request.getFile().getOriginalFilename());
       String newFileName = projectSaved.getId() + "_" + originalFileName;
       Path newFilePath = fileStorageService.uploadFileWithNewName(request.getFile(), newFileName);
       projectSaved.setFilePath(newFilePath.toString()); // Update the project with the new file path
