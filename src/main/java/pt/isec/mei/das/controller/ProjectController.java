@@ -35,7 +35,7 @@ public class ProjectController {
   }
 
   @PutMapping("/{id}/build")
-  public BuildResultDTO triggerBuild(@PathVariable long id) {
+  public BuildResultDTO submitBuild(@PathVariable long id) {
     return buildService.submitBuild(id);
   }
 

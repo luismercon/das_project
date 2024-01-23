@@ -12,7 +12,7 @@ public class ProjectBuildJob {
     private final BuildService buildService;
 
     @Scheduled(fixedRate = 60000)
-    public void reportCurrentTime() {
+    public void build() {
         BuildManager buildManager = BuildManager.getInstance();
         while (!buildManager.isEmpty()) {
             buildService.build(buildManager.dequeue());
