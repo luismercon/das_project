@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import pt.isec.mei.das.config.FileStorageProperties;
 import pt.isec.mei.das.dto.ProjectDTO;
 import pt.isec.mei.das.entity.Project;
-import pt.isec.mei.das.exception.ProjectNotFoundException;
+import pt.isec.mei.das.exception.EntityNotFoundException;
 import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
 
@@ -69,7 +69,7 @@ public class ProjectService {
     Project project =
         projectRepository
             .findById(id)
-            .orElseThrow(() -> new ProjectNotFoundException("Project not found with id: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + id));
 
     return ProjectDTO.builder()
         .id(project.getId())

@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pt.isec.mei.das.dto.BuildResultDTO;
 import pt.isec.mei.das.dto.ProjectDTO;
-import pt.isec.mei.das.service.BuildManager;
 import pt.isec.mei.das.service.BuildService;
 import pt.isec.mei.das.service.ProjectService;
 
@@ -35,11 +35,8 @@ public class ProjectController {
   }
 
   @PutMapping("/{id}/build")
-  public ResponseEntity<String> triggerBuild(@PathVariable long id) {
-
-    buildService.triggerBuild(id);
-
-    return ResponseEntity.ok("Build triggered for project " + id);
+  public BuildResultDTO triggerBuild(@PathVariable long id) {
+    return buildService.submitBuild(id);
   }
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

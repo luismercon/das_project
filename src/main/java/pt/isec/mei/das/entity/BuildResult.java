@@ -12,10 +12,13 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import pt.isec.mei.das.enums.CompilationStatus;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "BUILD_RESULT")
 public class BuildResult {
 
