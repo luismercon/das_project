@@ -1,13 +1,7 @@
 package pt.isec.mei.das.service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pt.isec.mei.das.config.FileStorageProperties;
@@ -15,10 +9,18 @@ import pt.isec.mei.das.dto.BuildResultDTO;
 import pt.isec.mei.das.entity.BuildResult;
 import pt.isec.mei.das.entity.Project;
 import pt.isec.mei.das.enums.CompilationStatus;
-import pt.isec.mei.das.exception.ProjectNotFoundException;
+import pt.isec.mei.das.exception.EntityNotFoundException;
 import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Slf4j
 @Service
 @AllArgsConstructor
 public class BuildService {
@@ -28,35 +30,34 @@ public class BuildService {
     private final BuildResultRepository buildResultRepository;
 
     @Transactional
-    public void triggerBuild(long projectId) {
+    public BuildResultDTO submitBuild(long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + projectId));
 
-        Project project =
-                projectRepository
-                        .findById(projectId)
-                        .orElseThrow(
-                                () -> new ProjectNotFoundException("Project not found with id: " + projectId));
+        BuildResult buildResult = new BuildResult();
+        buildResult.setProject(project);
+        buildResult.setCompilationStatus(CompilationStatus.IN_PROGRESS.name());
+        buildResult.setTimestamp(LocalDateTime.now());
+        buildResultRepository.save(buildResult);
 
-        BuildManager.getInstance().enqueue(project.getFilePath());
+        BuildManager.getInstance().enqueue(buildResult);
 
-        System.out.println("====================");
-        System.out.println("UNDER CONSTRUCTION: TRIGGER BUILD -- PROJECT ID: " + projectId);
-        System.out.println("FILEPATH: " + project.getFilePath());
-        System.out.println("====================");
+        log.info("Project {} is added to the build queue", project.getName());
 
-        for (String q : BuildManager.getInstance().getFilepathQueue()) {
-            System.out.println("File in queue: " + q);
-        }
-
-        System.out.println(BuildManager.getInstance().getFilepathQueue().toString());
-
-        build(project);
+        return BuildResultDTO.builder()
+                .id(buildResult.getId())
+                .projectId(buildResult.getProject().getId())
+                .compilationStatus(buildResult.getCompilationStatus())
+                .timestamp(buildResult.getTimestamp())
+                .build();
     }
 
-    private void build(Project project) {
-        String outputFileName = project.getId() + "_" + project.getName() + "_compiled";
+    @Transactional
+    public void build(BuildResult build) {
+        String outputFileName = build.getId() + "_" + build.getProject().getName() + "_compiled";
         File outputDir = new File(fileStorageProperties.getCompiledDir());
 
-        ProcessBuilder processBuilder = new ProcessBuilder("g++", project.getFilePath(), "-o", outputFileName);
+        ProcessBuilder processBuilder = new ProcessBuilder("g++", build.getProject().getFilePath(), "-o", outputFileName);
         processBuilder.directory(outputDir);
         processBuilder.redirectErrorStream(true);
 
@@ -66,8 +67,8 @@ public class BuildService {
 
             String buildLogs = getBuildLogs(process);
 
-            BuildResult buildResult = new BuildResult();
-            buildResult.setProject(project);
+            BuildResult buildResult = buildResultRepository.findById(build.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("BuildResults not found for project with id: " + build.getProject().getId()));
             buildResult.setBuildLogs(buildLogs);
             buildResult.setTimestamp(LocalDateTime.now());
 
@@ -82,6 +83,26 @@ public class BuildService {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    public List<BuildResultDTO> findBuildResultsByProjectId(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new EntityNotFoundException("Project not found with id: " + projectId));
+        List<BuildResult> buildResults = buildResultRepository.findBuildResultByProject(project);
+        if (buildResults.isEmpty()) {
+            throw new EntityNotFoundException("BuildResult not found for project with id: " + projectId);
+        }
+        return buildResults.stream()
+                .map(b -> BuildResultDTO.builder()
+                                .id(b.getId())
+                                .projectId(b.getProject().getId())
+                                .sourceCodeHash(b.getSourceCodeHash())
+                                .compilationStatus(b.getCompilationStatus())
+                                .executableFilePath(b.getExecutableFilePath())
+                                .buildLogs(b.getBuildLogs())
+                                .timestamp(b.getTimestamp())
+                                .build())
+                .toList();
     }
 
     public List<BuildResultDTO> findAllBuildResults() {
@@ -100,6 +121,20 @@ public class BuildService {
                                         .timestamp(b.getTimestamp())
                                         .build())
                 .toList();
+    }
+
+    public BuildResultDTO findBuildResultById(Long id) {
+        BuildResult buildResult = buildResultRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("BuildResult with id: " + id + " not found"));
+        return BuildResultDTO.builder()
+                .id(buildResult.getId())
+                .projectId(buildResult.getProject().getId())
+                .sourceCodeHash(buildResult.getSourceCodeHash())
+                .compilationStatus(buildResult.getCompilationStatus())
+                .executableFilePath(buildResult.getExecutableFilePath())
+                .buildLogs(buildResult.getBuildLogs())
+                .timestamp(buildResult.getTimestamp())
+                .build();
     }
 
     private String getBuildLogs(Process process) throws IOException {

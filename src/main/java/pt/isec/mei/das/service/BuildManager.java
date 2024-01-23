@@ -2,34 +2,35 @@ package pt.isec.mei.das.service;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import pt.isec.mei.das.entity.BuildResult;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.AbstractQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Slf4j
 public class BuildManager {
 
   private static BuildManager instance = new BuildManager();
-  @Getter private Queue<String> filepathQueue;
+  @Getter private AbstractQueue<BuildResult> buildQueue;
 
   private BuildManager() {
-    filepathQueue = new LinkedList<>();
+    buildQueue = new ConcurrentLinkedQueue<>();
   }
 
   public static BuildManager getInstance() {
     return instance;
   }
 
-  public void enqueue(String filePath) {
-    log.info("adding this filePath to queue: " + filePath);
-    filepathQueue.add(filePath);
+  public void enqueue(BuildResult buildResult) {
+    log.info("adding this filePath to queue: " + buildResult);
+    buildQueue.add(buildResult);
   }
 
-  public String dequeue() {
-    return filepathQueue.poll();
+  public BuildResult dequeue() {
+    return buildQueue.poll();
   }
 
   public boolean isEmpty() {
-    return filepathQueue.isEmpty();
+    return buildQueue.isEmpty();
   }
 }
