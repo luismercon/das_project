@@ -14,10 +14,6 @@ public class ProjectLanguage {
     @Column(name = "project_language_id")
     private long id;
 
-    @ManyToOne
-    @JoinColumn(name = "project_id", nullable = false)
-    private Project project;
-
     @Column(name = "file_extension")
     private String file_extension;
 
