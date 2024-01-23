@@ -17,3 +17,12 @@ CREATE TABLE BUILD_RESULT
     timestamp            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES PROJECT (project_id)
 );
+
+CREATE TABLE PROJECT_LANGUAGE
+(
+    project_language_id  BIGSERIAL PRIMARY KEY,
+    project_id           BIGINT NOT NULL,
+    file_extension       varchar(100),
+    programming_language varchar(100),
+    FOREIGN KEY (project_id) REFERENCES PROJECT (project_id)
+);
