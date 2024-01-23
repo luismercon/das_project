@@ -1,3 +1,10 @@
+CREATE TABLE PROJECT_LANGUAGE
+(
+    project_language_id  BIGSERIAL PRIMARY KEY,
+    file_extension       varchar(100),
+    programming_language varchar(100)
+);
+
 CREATE TABLE PROJECT
 (
     project_id          BIGSERIAL primary key,
@@ -20,9 +27,4 @@ CREATE TABLE BUILD_RESULT
     FOREIGN KEY (project_id) REFERENCES PROJECT (project_id)
 );
 
-CREATE TABLE PROJECT_LANGUAGE
-(
-    project_language_id  BIGSERIAL PRIMARY KEY,
-    file_extension       varchar(100),
-    programming_language varchar(100),
-);
+
