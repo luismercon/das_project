@@ -14,6 +14,7 @@ import pt.isec.mei.das.config.FileStorageProperties;
 import pt.isec.mei.das.dto.BuildResultDTO;
 import pt.isec.mei.das.entity.BuildResult;
 import pt.isec.mei.das.entity.Project;
+import pt.isec.mei.das.enums.CompilationStatus;
 import pt.isec.mei.das.exception.ProjectNotFoundException;
 import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
@@ -72,7 +73,9 @@ public class BuildService {
 
             if (exitCode == 0) {
                 buildResult.setExecutableFilePath(new File(outputDir, outputFileName).getAbsolutePath());
-                buildResult.setCompilationStatus(true);
+                buildResult.setCompilationStatus(CompilationStatus.SUCCESS.name());
+            } else {
+                buildResult.setCompilationStatus(CompilationStatus.FAILURE.name());
             }
             buildResultRepository.save(buildResult);
         } catch (IOException | InterruptedException e) {
