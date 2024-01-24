@@ -12,6 +12,8 @@ import pt.isec.mei.das.enums.CompilationStatus;
 import pt.isec.mei.das.exception.EntityNotFoundException;
 import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
+import pt.isec.mei.das.service.compile.Compiler;
+import pt.isec.mei.das.service.compile.CompilerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -57,12 +59,10 @@ public class BuildService {
         String outputFileName = build.getId() + "_" + build.getProject().getName() + "_compiled";
         File outputDir = new File(fileStorageProperties.getCompiledDir());
 
-        ProcessBuilder processBuilder = new ProcessBuilder("g++", build.getProject().getFilePath(), "-o", outputFileName);
-        processBuilder.directory(outputDir);
-        processBuilder.redirectErrorStream(true);
+        Compiler compiler = CompilerFactory.getCompiler(build.getProject().getProjectLanguage().getProgrammingLanguage());
 
         try {
-            Process process = processBuilder.start();
+            Process process = compiler.compile(build.getProject().getFilePath(), outputFileName, outputDir);
             int exitCode = process.waitFor();
 
             String buildLogs = getBuildLogs(process);
