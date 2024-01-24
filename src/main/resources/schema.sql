@@ -1,9 +1,18 @@
+CREATE TABLE PROJECT_LANGUAGE
+(
+    project_language_id  BIGSERIAL PRIMARY KEY,
+    file_extension       varchar(100),
+    programming_language varchar(100)
+);
+
 CREATE TABLE PROJECT
 (
-    project_id BIGSERIAL primary key,
-    name       varchar(50) not null,
-    created_at timestamp   not null,
-    file_path  varchar(100)
+    project_id          BIGSERIAL primary key,
+    project_language_id BIGINT      NOT NULL,
+    name                varchar(50) not null,
+    created_at          timestamp   not null,
+    file_path           varchar(100),
+    FOREIGN KEY (project_language_id) REFERENCES PROJECT_LANGUAGE (project_language_id)
 );
 
 CREATE TABLE BUILD_RESULT
@@ -17,3 +26,5 @@ CREATE TABLE BUILD_RESULT
     timestamp            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (project_id) REFERENCES PROJECT (project_id)
 );
+
+

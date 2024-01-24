@@ -1,12 +1,7 @@
 package pt.isec.mei.das.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
@@ -23,6 +18,10 @@ public class Project {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "project_id")
   private long id;
+
+  @OneToOne
+  @JoinColumn(name = "project_language_id", nullable = false)
+  private ProjectLanguage projectLanguage;
 
   @Column(name = "name")
   private String name;
