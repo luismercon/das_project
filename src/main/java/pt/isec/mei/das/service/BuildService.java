@@ -19,8 +19,8 @@ import pt.isec.mei.das.enums.CompilationStatus;
 import pt.isec.mei.das.exception.EntityNotFoundException;
 import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
-import pt.isec.mei.das.service.compile.Compiler;
-import pt.isec.mei.das.service.compile.CompilerFactory;
+import pt.isec.mei.das.service.compiler.Compiler;
+import pt.isec.mei.das.service.compiler.CompilerFactory;
 
 @Slf4j
 @Service
@@ -32,7 +32,7 @@ public class BuildService {
   private final BuildResultRepository buildResultRepository;
 
   @Transactional
-  public BuildResultDTO submitBuild(long projectId) {
+  public BuildResultDTO submitBuild(long projectId, boolean isNotificationNeeded) {
     Project project =
         projectRepository
             .findById(projectId)
@@ -43,6 +43,7 @@ public class BuildService {
     buildResult.setProject(project);
     buildResult.setCompilationStatus(CompilationStatus.IN_PROGRESS.name());
     buildResult.setTimestamp(LocalDateTime.now());
+    buildResult.setNotificationNeeded(isNotificationNeeded);
     buildResultRepository.save(buildResult);
 
     BuildManager.getInstance().enqueue(buildResult);
@@ -58,7 +59,7 @@ public class BuildService {
   }
 
   @Transactional
-  public void build(BuildResult build) {
+  public BuildResult build(BuildResult build) {
 
     long start = System.currentTimeMillis();
     System.out.println("Start: " + start);
@@ -102,7 +103,7 @@ public class BuildService {
 
       buildResult.setCompilationTimeInMs(time);
 
-      buildResultRepository.save(buildResult);
+      return buildResultRepository.save(buildResult);
     } catch (IOException | InterruptedException e) {
       e.printStackTrace();
       throw new RuntimeException(e);

@@ -24,6 +24,7 @@ CREATE TABLE BUILD_RESULT
     executable_file_path VARCHAR(255),
     build_logs           TEXT,
     timestamp            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notification_needed  BOOLEAN DEFAULT false,
     FOREIGN KEY (project_id) REFERENCES PROJECT (project_id)
 );
 
