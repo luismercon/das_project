@@ -2,13 +2,13 @@ package pt.isec.mei.das.controller;
 
 import java.util.List;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pt.isec.mei.das.dto.BuildResultDTO;
-import pt.isec.mei.das.dto.BuildResultDecoratedWithTimeInSeconds;
 import pt.isec.mei.das.service.BuildService;
 
 @RestController
@@ -27,9 +27,26 @@ public class BuildResultController {
     return ResponseEntity.ok(buildService.findBuildResultById(id));
   }
 
+  @GetMapping("/{id}/status")
+  public ResponseEntity<String> getStatusBuildResultForProject(@PathVariable("id") Long id) {
+    return ResponseEntity.ok(buildService.findStatusBuildResultById(id));
+  }
+
   @GetMapping("/{id}/time-converted")
-  public ResponseEntity<BuildResultDecoratedWithTimeInSeconds> getDetailedBuildResultForProject(
-      @PathVariable("id") Long id) {
+  public ResponseEntity<?> getDetailedBuildResultForProject(@PathVariable("id") Long id) {
+
+    BuildResultDTO buildResultById = buildService.findBuildResultById(id);
+
+    if (buildResultById.getCompilationStatus().equals("NOT_STARTED")
+        || buildResultById.getCompilationStatus().equals("IN_PROGRESS")) {
+      String response =
+          "Your process didn't finish. You can check the status at: http://localhost:8080/builds/"
+              + id
+              + "/status";
+
+      return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
     return ResponseEntity.ok(buildService.findDetailedBuildResultById(id));
   }
 

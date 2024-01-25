@@ -169,6 +169,17 @@ public class BuildService {
         .build();
   }
 
+  public String findStatusBuildResultById(Long id) {
+
+    String status = buildResultRepository.findStatusById(id);
+
+    if (status == null) {
+      return String.format("Build id: %d not found", id);
+    }
+
+    return status;
+  }
+
   public BuildResultDecoratedWithTimeInSeconds findDetailedBuildResultById(Long id) {
 
     BuildResult buildResult =
