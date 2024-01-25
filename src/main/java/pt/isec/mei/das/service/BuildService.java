@@ -181,7 +181,6 @@ public class BuildService {
   }
 
   public BuildResultDecoratedWithTimeInSeconds findDetailedBuildResultById(Long id) {
-
     BuildResult buildResult =
         buildResultRepository
             .findById(id)

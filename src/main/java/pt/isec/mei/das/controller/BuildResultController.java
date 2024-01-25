@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pt.isec.mei.das.dto.AbstractBuildResultDecorator;
 import pt.isec.mei.das.dto.BuildResultDTO;
+import pt.isec.mei.das.dto.BuildResultDecoratedWithTimeInSeconds;
+import pt.isec.mei.das.dto.BuildResultDecorator;
 import pt.isec.mei.das.service.BuildService;
 
 @RestController
@@ -34,21 +37,22 @@ public class BuildResultController {
 
   @GetMapping("/{id}/time-converted")
   public ResponseEntity<?> getDetailedBuildResultForProject(@PathVariable("id") Long id) {
-
     BuildResultDTO buildResultById = buildService.findBuildResultById(id);
 
     if (buildResultById.getCompilationStatus().equals("NOT_STARTED")
-        || buildResultById.getCompilationStatus().equals("IN_PROGRESS")) {
+            || buildResultById.getCompilationStatus().equals("IN_PROGRESS")) {
       String response =
-          "Your process didn't finish. You can check the status at: http://localhost:8080/builds/"
-              + id
-              + "/status";
+              "Your process didn't finish. You can check the status at: http://localhost:8080/builds/"
+                      + id
+                      + "/status";
 
       return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
-    return ResponseEntity.ok(buildService.findDetailedBuildResultById(id));
+    BuildResultDecorator decoratedResult = new BuildResultDecoratedWithTimeInSeconds(buildResultById);
+    return ResponseEntity.ok(decoratedResult);
   }
+
 
   @GetMapping("/project/{projectId}")
   public ResponseEntity<List<BuildResultDTO>> getBuildResult(
