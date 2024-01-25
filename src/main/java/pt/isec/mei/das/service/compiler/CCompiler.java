@@ -1,4 +1,4 @@
-package pt.isec.mei.das.service.compile;
+package pt.isec.mei.das.service.compiler;
 
 import java.io.File;
 import java.io.IOException;

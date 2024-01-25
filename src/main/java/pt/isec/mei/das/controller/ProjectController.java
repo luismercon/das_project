@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pt.isec.mei.das.dto.BuildResultDTO;
 import pt.isec.mei.das.dto.ProjectDTO;
@@ -35,8 +36,9 @@ public class ProjectController {
   }
 
   @PutMapping("/{id}/build")
-  public BuildResultDTO submitBuild(@PathVariable long id) {
-    return buildService.submitBuild(id);
+  public BuildResultDTO submitBuild(@PathVariable long id,
+                                    @RequestParam(required = false) boolean isNotificationNeeded) {
+    return buildService.submitBuild(id, isNotificationNeeded);
   }
 
   @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

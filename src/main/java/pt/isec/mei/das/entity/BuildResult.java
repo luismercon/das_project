@@ -41,4 +41,7 @@ public class BuildResult {
 
   @Column(name = "timestamp")
   private LocalDateTime timestamp;
+
+  @Column(name = "notification_needed")
+  private boolean notificationNeeded;
 }
