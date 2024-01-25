@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import pt.isec.mei.das.dto.BuildResultDTO;
 import pt.isec.mei.das.service.BuildService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -25,49 +27,46 @@ public class BuildResultController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BuildResultDTO> getBuildResultForProject(@PathVariable("id") Long id, @RequestParam(required = false) List<String> fields) {
+    public ResponseEntity<Map<String, Object>> getBuildResultForProject(@PathVariable("id") Long id, @RequestParam(required = false) List<String> fields) {
         BuildResultDTO buildResult = buildService.findBuildResultById(id);
+        Map<String, Object> filteredResult = new HashMap<>();
         if (fields != null && !fields.isEmpty()) {
-            buildResult = filterFields(buildResult, fields);
+            filteredResult = filterFields(buildResult, fields);
         }
-        return ResponseEntity.ok(buildResult);
+        return ResponseEntity.ok(filteredResult);
     }
 
-    private BuildResultDTO filterFields(BuildResultDTO buildResult, List<String> fields) {
-        // Create a new BuildResultDTO object
-        BuildResultDTO filteredBuildResult = new BuildResultDTO();
-
-        // Check each field in the fields list and copy the corresponding property from buildResult to filteredBuildResult
+    private Map<String, Object> filterFields(BuildResultDTO buildResult, List<String> fields) {
+        Map<String, Object> filteredResult = new HashMap<>();
         for (String field : fields) {
             switch (field) {
                 case "id":
-                    filteredBuildResult.setId(buildResult.getId());
+                    filteredResult.put("id", buildResult.getId());
                     break;
                 case "projectId":
-                    filteredBuildResult.setProjectId(buildResult.getProjectId());
+                    filteredResult.put("projectId", buildResult.getProjectId());
                     break;
                 case "sourceCodeHash":
-                    filteredBuildResult.setSourceCodeHash(buildResult.getSourceCodeHash());
+                    filteredResult.put("sourceCodeHash", buildResult.getSourceCodeHash());
                     break;
                 case "compilationStatus":
-                    filteredBuildResult.setCompilationStatus(buildResult.getCompilationStatus());
+                    filteredResult.put("compilationStatus", buildResult.getCompilationStatus());
                     break;
                 case "executableFilePath":
-                    filteredBuildResult.setExecutableFilePath(buildResult.getExecutableFilePath());
+                    filteredResult.put("executableFilePath", buildResult.getExecutableFilePath());
                     break;
                 case "buildLogs":
-                    filteredBuildResult.setBuildLogs(buildResult.getBuildLogs());
+                    filteredResult.put("buildLogs", buildResult.getBuildLogs());
                     break;
                 case "timestamp":
-                    filteredBuildResult.setTimestamp(buildResult.getTimestamp());
+                    filteredResult.put("timestamp", buildResult.getTimestamp());
                     break;
                 default:
-                    // Handle the case where a client might ask for a field that does not exist
+
                     break;
             }
         }
-
-        return filteredBuildResult;
+        return filteredResult;
     }
 
     @GetMapping("/project/{projectId}")
