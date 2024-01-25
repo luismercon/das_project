@@ -1,23 +1,21 @@
 package pt.isec.mei.das.dto;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import pt.isec.mei.das.enums.CompilationStatus;
-
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
 @EqualsAndHashCode
 @Builder
-public class BuildResultDTO {
-    private Long id;
-    private Long projectId;
-    private String sourceCodeHash;
-    private String compilationStatus;
-    private String executableFilePath;
-    private String buildLogs;
-    private LocalDateTime timestamp;
+public class BuildResultDTO implements BuildResultDecorator {
+  private Long id;
+  private Long projectId;
+  private Long compilationTimeMs;
+  private String compilationStatus;
+  private String executableFilePath;
+  private String buildLogs;
+  private LocalDateTime timestamp;
 }
