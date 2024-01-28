@@ -19,11 +19,12 @@ CREATE TABLE BUILD_RESULT
 (
     build_result_id      BIGSERIAL PRIMARY KEY,
     project_id           BIGINT NOT NULL,
-    source_code_hash     VARCHAR(255),
+    compilation_time_ms  BIGINT,
     compilation_status   VARCHAR(255),
     executable_file_path VARCHAR(255),
     build_logs           TEXT,
     timestamp            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    notification_needed  BOOLEAN DEFAULT false,
     FOREIGN KEY (project_id) REFERENCES PROJECT (project_id)
 );
 
