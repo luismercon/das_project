@@ -59,8 +59,8 @@ public class BuildService {
         buildResult.setCompilationStatus(IN_QUEUE.name());
         buildResult.setTimestamp(LocalDateTime.now());
         buildResult.setNotificationNeeded(isNotificationNeeded);
-        BuildResult build = buildResultRepository.save(buildResult);
 
+        BuildResult build = buildResultRepository.save(buildResult);
         BuildManager.getInstance().enqueue(build);
 
         log.info("Project {} is added to the build queue", project.getName());
@@ -190,6 +190,7 @@ public class BuildService {
         return buildResultRepository.save(buildResult);
     }
 
+    @Transactional
     public void delete(long id) {
         BuildResult buildResult = findBuildResultById(id);
         buildResultRepository.delete(buildResult);
