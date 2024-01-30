@@ -11,7 +11,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class BuildManager {
 
   private static BuildManager instance = new BuildManager();
-  @Getter private AbstractQueue<BuildResult> buildQueue;
+  @Getter
+  private final AbstractQueue<BuildResult> buildQueue;
 
   private BuildManager() {
     buildQueue = new ConcurrentLinkedQueue<>();
