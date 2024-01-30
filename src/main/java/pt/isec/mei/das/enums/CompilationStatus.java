@@ -1,8 +1,9 @@
 package pt.isec.mei.das.enums;
 
 public enum CompilationStatus {
-    NOT_STARTED,
+    IN_QUEUE,
     IN_PROGRESS,
     SUCCESS,
-    FAILURE
+    FAILURE,
+    CANCELLED
 }

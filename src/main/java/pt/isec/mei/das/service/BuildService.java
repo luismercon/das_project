@@ -5,24 +5,37 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import pt.isec.mei.das.config.FileStorageProperties;
-import pt.isec.mei.das.dto.BuildResultDTO;
-import pt.isec.mei.das.dto.BuildResultDecoratedWithTimeInSeconds;
 import pt.isec.mei.das.entity.BuildResult;
 import pt.isec.mei.das.entity.Project;
 import pt.isec.mei.das.enums.CompilationStatus;
+import pt.isec.mei.das.exception.BuildCancelledException;
 import pt.isec.mei.das.exception.EntityNotFoundException;
+import pt.isec.mei.das.exception.StateChangeNotAllowedException;
 import pt.isec.mei.das.repository.BuildResultRepository;
 import pt.isec.mei.das.repository.ProjectRepository;
 import pt.isec.mei.das.service.compiler.Compiler;
 import pt.isec.mei.das.service.compiler.CompilerFactory;
-import pt.isec.mei.das.util.FieldFilterUtil;
+
+import static pt.isec.mei.das.enums.CompilationStatus.CANCELLED;
+import static pt.isec.mei.das.enums.CompilationStatus.FAILURE;
+import static pt.isec.mei.das.enums.CompilationStatus.IN_PROGRESS;
+import static pt.isec.mei.das.enums.CompilationStatus.IN_QUEUE;
+import static pt.isec.mei.das.enums.CompilationStatus.SUCCESS;
 
 @Slf4j
 @Service
@@ -34,7 +47,7 @@ public class BuildService {
     private final BuildResultRepository buildResultRepository;
 
     @Transactional
-    public BuildResultDTO submitBuild(long projectId, boolean isNotificationNeeded) {
+    public BuildResult submitBuild(long projectId, boolean isNotificationNeeded) {
         Project project =
                 projectRepository
                         .findById(projectId)
@@ -43,21 +56,16 @@ public class BuildService {
 
         BuildResult buildResult = new BuildResult();
         buildResult.setProject(project);
-        buildResult.setCompilationStatus(CompilationStatus.IN_PROGRESS.name());
+        buildResult.setCompilationStatus(IN_QUEUE.name());
         buildResult.setTimestamp(LocalDateTime.now());
         buildResult.setNotificationNeeded(isNotificationNeeded);
-        buildResultRepository.save(buildResult);
 
-        BuildManager.getInstance().enqueue(buildResult);
+        BuildResult build = buildResultRepository.save(buildResult);
+        BuildManager.getInstance().enqueue(build);
 
         log.info("Project {} is added to the build queue", project.getName());
 
-        return BuildResultDTO.builder()
-                .id(buildResult.getId())
-                .projectId(buildResult.getProject().getId())
-                .compilationStatus(buildResult.getCompilationStatus())
-                .timestamp(buildResult.getTimestamp())
-                .build();
+        return build;
     }
 
     @Transactional
@@ -74,26 +82,25 @@ public class BuildService {
                         build.getProject().getProjectLanguage().getProgrammingLanguage());
 
         try {
-            Process process =
+            Process startedPocess =
                     compiler.compile(build.getProject().getFilePath(), outputFileName, outputDir);
-            int exitCode = process.waitFor();
 
-            String buildLogs = getBuildLogs(process);
+            int exitCode = checkForCancellation(build, startedPocess);
 
-            BuildResult buildResult =
-                    buildResultRepository
-                            .findById(build.getId())
-                            .orElseThrow(
-                                    () ->
-                                            new EntityNotFoundException(
-                                                    "BuildResults not found for project with id: "
-                                                            + build.getProject().getId()));
+            String currentStatus = findStatusBuildResultById(build.getId());
+            if (currentStatus.equals(CANCELLED.name())) {
+                throw new BuildCancelledException("build " + build.getId()+ " cancelled");
+            }
+
+            String buildLogs = getBuildLogs(startedPocess);
+
+            BuildResult buildResult = findBuildResultById(build.getId());
             buildResult.setBuildLogs(buildLogs);
             buildResult.setTimestamp(LocalDateTime.now());
 
             if (exitCode == 0) {
                 buildResult.setExecutableFilePath(new File(outputDir, outputFileName).getAbsolutePath());
-                buildResult.setCompilationStatus(CompilationStatus.SUCCESS.name());
+                buildResult.setCompilationStatus(SUCCESS.name());
             } else {
                 buildResult.setCompilationStatus(CompilationStatus.FAILURE.name());
             }
@@ -112,7 +119,7 @@ public class BuildService {
         }
     }
 
-    public List<BuildResultDTO> findBuildResultsByProjectId(Long projectId) {
+    public List<BuildResult> findBuildResultsByProjectId(Long projectId) {
         Project project =
                 projectRepository
                         .findById(projectId)
@@ -122,75 +129,19 @@ public class BuildService {
         if (buildResults.isEmpty()) {
             throw new EntityNotFoundException("BuildResult not found for project with id: " + projectId);
         }
-        return buildResults.stream()
-                .map(
-                        b ->
-                                BuildResultDTO.builder()
-                                        .id(b.getId())
-                                        .projectId(b.getProject().getId())
-                                        .compilationTimeMs(b.getCompilationTimeInMs())
-                                        .compilationStatus(b.getCompilationStatus())
-                                        .executableFilePath(b.getExecutableFilePath())
-                                        .buildLogs(b.getBuildLogs())
-                                        .timestamp(b.getTimestamp())
-                                        .build())
-                .toList();
+        return buildResults;
     }
 
-    public List<BuildResultDTO> findAllBuildResults() {
-        List<BuildResult> buildResults = buildResultRepository.findAll();
-
-        return buildResults.stream()
-                .map(
-                        b ->
-                                BuildResultDTO.builder()
-                                        .id(b.getId())
-                                        .projectId(b.getProject().getId())
-                                        .compilationTimeMs(b.getCompilationTimeInMs())
-                                        .compilationStatus(b.getCompilationStatus())
-                                        .executableFilePath(b.getExecutableFilePath())
-                                        .buildLogs(b.getBuildLogs())
-                                        .timestamp(b.getTimestamp())
-                                        .build())
-                .toList();
+    public List<BuildResult> findAllBuildResults() {
+        return buildResultRepository.findAll();
     }
 
-    public BuildResultDTO findBuildResultById(Long id) {
-        BuildResult buildResult =
-                buildResultRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () -> new EntityNotFoundException("BuildResult with id: " + id + " not found"));
-        return BuildResultDTO.builder()
-                .id(buildResult.getId())
-                .projectId(buildResult.getProject().getId())
-                .compilationTimeMs(buildResult.getCompilationTimeInMs())
-                .compilationStatus(buildResult.getCompilationStatus())
-                .executableFilePath(buildResult.getExecutableFilePath())
-                .buildLogs(buildResult.getBuildLogs())
-                .timestamp(buildResult.getTimestamp())
-                .build();
+    public BuildResult findBuildResultById(Long id) {
+        return buildResultRepository
+                .findById(id)
+                .orElseThrow(
+                        () -> new EntityNotFoundException("BuildResult with id: " + id + " not found"));
     }
-
-    public Object findBuildResultById(Long id, List<String> fields) {
-        BuildResult buildResult = buildResultRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("BuildResult with id: " + id + " not found"));
-
-        if (fields == null || fields.isEmpty()) {
-            return BuildResultDTO.builder()
-                    .id(buildResult.getId())
-                    .projectId(buildResult.getProject().getId())
-                    .compilationTimeMs(buildResult.getCompilationTimeInMs())
-                    .compilationStatus(buildResult.getCompilationStatus())
-                    .executableFilePath(buildResult.getExecutableFilePath())
-                    .buildLogs(buildResult.getBuildLogs())
-                    .timestamp(buildResult.getTimestamp())
-                    .build();
-        } else {
-            return FieldFilterUtil.filterFields(buildResult, fields);
-        }
-    }
-
 
     public String findStatusBuildResultById(Long id) {
 
@@ -203,25 +154,46 @@ public class BuildService {
         return status;
     }
 
-    public BuildResultDecoratedWithTimeInSeconds findDetailedBuildResultById(Long id) {
-        BuildResult buildResult =
-                buildResultRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () -> new EntityNotFoundException("BuildResult with id: " + id + " not found"));
+    @Transactional
+    public BuildResult cancelBuild(long buildId) {
+        BuildResult buildResult = findBuildResultById(buildId);
+        List<String> noCancelStatuses = Arrays.asList(CANCELLED.name(), FAILURE.name(), SUCCESS.name());
 
-        BuildResultDTO dto =
-                BuildResultDTO.builder()
-                        .id(buildResult.getId())
-                        .projectId(buildResult.getProject().getId())
-                        .compilationTimeMs(buildResult.getCompilationTimeInMs())
-                        .compilationStatus(buildResult.getCompilationStatus())
-                        .executableFilePath(buildResult.getExecutableFilePath())
-                        .buildLogs(buildResult.getBuildLogs())
-                        .timestamp(buildResult.getTimestamp())
-                        .build();
+        if (noCancelStatuses.contains(buildResult.getCompilationStatus())) {
+            throw new StateChangeNotAllowedException("BuildResult with id " + buildId + " is already processed. " +
+                    "The current status is " + buildResult.getCompilationStatus());
+        }
 
-        return new BuildResultDecoratedWithTimeInSeconds(dto);
+        buildResult.setCompilationStatus(CompilationStatus.CANCELLED.name());
+        return buildResultRepository.save(buildResult);
+    }
+
+    @Transactional
+    public BuildResult retryBuild(long buildId) {
+        BuildResult buildResult = findBuildResultById(buildId);
+        List<String> noRetryStatuses = Arrays.asList(IN_QUEUE.name(), IN_PROGRESS.name(), SUCCESS.name());
+
+        if (noRetryStatuses.contains(buildResult.getCompilationStatus())) {
+            throw new StateChangeNotAllowedException("Build with id " + buildId + " is in the queue or finished successfully");
+        }
+
+        buildResult.setCompilationStatus(IN_QUEUE.name());
+        buildResultRepository.save(buildResult);
+        BuildManager.getInstance().enqueue(buildResult);
+
+        return buildResult;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public BuildResult updateStatus(BuildResult buildResult, CompilationStatus compilationStatus) {
+        buildResult.setCompilationStatus(compilationStatus.name());
+        return buildResultRepository.save(buildResult);
+    }
+
+    @Transactional
+    public void delete(long id) {
+        BuildResult buildResult = findBuildResultById(id);
+        buildResultRepository.delete(buildResult);
     }
 
     private String getBuildLogs(Process process) throws IOException {
@@ -232,5 +204,37 @@ public class BuildService {
             buildLogs.append(line).append("\n");
         }
         return buildLogs.toString();
+    }
+
+    private int checkForCancellation(BuildResult build, Process startedPocess) {
+        ExecutorService statusChecker = Executors.newSingleThreadExecutor();
+        Future<?> statusCheckFuture = statusChecker.submit(() -> {
+            while (startedPocess.isAlive()) {
+                String currentStatus = findStatusBuildResultById(build.getId());
+                if (CompilationStatus.CANCELLED.name().equals(currentStatus)) {
+                    startedPocess.destroy();
+                    throw new BuildCancelledException("build " + build.getId()+ " cancelled");
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new BuildCancelledException("");
+                }
+            }
+        });
+
+        int exitCode;
+        try {
+            exitCode = startedPocess.waitFor();
+            statusCheckFuture.get(1, TimeUnit.SECONDS); // Wait for status checking thread to complete
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new BuildCancelledException("build " + build.getId()+ " cancelled");
+        }
+
+        statusCheckFuture.cancel(true); // Cancel the status checking thread
+        statusChecker.shutdown();
+
+        return exitCode;
     }
 }
