@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,7 +35,7 @@ public class ProjectController {
         return ResponseEntity.ok(projectService.getProjectById(id));
     }
 
-    @PutMapping("/{id}/build")
+    @PostMapping("/{id}/build")
     public BuildResultDTO submitBuild(@PathVariable long id,
                                       @RequestParam(required = false) boolean isNotificationNeeded) {
         return buildResultFacade.submitBuild(id, isNotificationNeeded);

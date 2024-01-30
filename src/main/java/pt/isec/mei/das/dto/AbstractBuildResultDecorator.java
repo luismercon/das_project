@@ -40,7 +40,7 @@ public abstract class AbstractBuildResultDecorator implements BuildResultDecorat
   }
 
   @Override
-  public Long getCompilationTimeMs() {
-    return decoratedBuildResult.getCompilationTimeMs();
+  public Long getCompilationTimeInMs() {
+    return decoratedBuildResult.getCompilationTimeInMs();
   }
 }

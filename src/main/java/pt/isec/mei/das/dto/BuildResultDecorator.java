@@ -15,5 +15,5 @@ public interface BuildResultDecorator {
 
   LocalDateTime getTimestamp();
 
-  Long getCompilationTimeMs();
+  Long getCompilationTimeInMs();
 }
