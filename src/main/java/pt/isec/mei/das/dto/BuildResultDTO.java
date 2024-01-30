@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class BuildResultDTO implements BuildResultDecorator {
   private Long id;
   private Long projectId;
-  private Long compilationTimeMs;
+  private Long compilationTimeInMs;
   private String compilationStatus;
   private String executableFilePath;
   private String buildLogs;
