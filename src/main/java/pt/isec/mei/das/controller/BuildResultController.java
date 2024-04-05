@@ -44,6 +44,7 @@ public class BuildResultController {
     @GetMapping("/{id}/status")
     public ResponseEntity<String> getStatusBuildResultForProject(@PathVariable("id") Long id) {
         return ResponseEntity.ok(buildResultFacade.findStatusBuildResultById(id));
+
     }
 
     @GetMapping("/{id}/time-converted")
